@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SendKit/SendKit.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SendKit.Tests/SendKit.Tests.csproj" />
+  </Folder>
+</Solution>

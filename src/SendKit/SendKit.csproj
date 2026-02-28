@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>SendKit</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>SendKit</Authors>
+    <Description>Official .NET SDK for the SendKit email API</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/sendkitdev/sendkit-dotnet</RepositoryUrl>
+    <PackageProjectUrl>https://sendkit.com</PackageProjectUrl>
+    <PackageTags>sendkit;email;api;sdk</PackageTags>
+  </PropertyGroup>
+
+</Project>
