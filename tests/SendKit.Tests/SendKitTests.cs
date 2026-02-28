@@ -62,7 +62,7 @@ public class EmailTests
             };
         });
 
-        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.com") };
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
         var client = new SendKitClient("sk_test_123", httpClient: httpClient);
 
         var result = await client.Emails.SendAsync(new SendEmailParams
@@ -92,7 +92,7 @@ public class EmailTests
             };
         });
 
-        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.com") };
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
         var client = new SendKitClient("sk_test_123", httpClient: httpClient);
 
         var result = await client.Emails.SendAsync(new SendEmailParams
@@ -126,7 +126,7 @@ public class EmailTests
             };
         });
 
-        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.com") };
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
         var client = new SendKitClient("sk_test_123", httpClient: httpClient);
 
         var result = await client.Emails.SendMimeAsync(new SendMimeEmailParams
@@ -145,7 +145,7 @@ public class EmailTests
         var handler = new MockHandler(HttpStatusCode.UnprocessableEntity,
             """{"name":"validation_error","message":"The to field is required.","status_code":422}""");
 
-        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.com") };
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
         var client = new SendKitClient("sk_test_123", httpClient: httpClient);
 
         var ex = await Assert.ThrowsAsync<SendKitException>(() =>

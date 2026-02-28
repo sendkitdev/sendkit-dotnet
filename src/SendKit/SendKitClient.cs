@@ -9,7 +9,7 @@ public class SendKitClient
 
     public Emails Emails { get; }
 
-    public SendKitClient(string? apiKey = null, string baseUrl = "https://api.sendkit.com", HttpClient? httpClient = null)
+    public SendKitClient(string? apiKey = null, string baseUrl = "https://api.sendkit.dev", HttpClient? httpClient = null)
     {
         var key = string.IsNullOrEmpty(apiKey)
             ? Environment.GetEnvironmentVariable("SENDKIT_API_KEY") ?? ""
