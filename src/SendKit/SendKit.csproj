@@ -12,6 +12,11 @@
     <RepositoryUrl>https://github.com/sendkitdev/sendkit-dotnet</RepositoryUrl>
     <PackageProjectUrl>https://sendkit.com</PackageProjectUrl>
     <PackageTags>sendkit;email;api;sdk</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
 
 </Project>
