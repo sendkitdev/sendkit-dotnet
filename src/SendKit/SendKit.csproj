@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>SendKit</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>SendKit</Authors>
     <Description>Official .NET SDK for the SendKit email API</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
