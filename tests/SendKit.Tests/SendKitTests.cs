@@ -47,7 +47,7 @@ public class EmailTests
         var handler = new MockHandler(async request =>
         {
             Assert.Equal(HttpMethod.Post, request.Method);
-            Assert.Equal("/v1/emails", request.RequestUri!.AbsolutePath);
+            Assert.Equal("/emails", request.RequestUri!.AbsolutePath);
             Assert.Equal("Bearer sk_test_123", request.Headers.Authorization!.ToString());
 
             var body = await request.Content!.ReadAsStringAsync();
@@ -113,7 +113,7 @@ public class EmailTests
     {
         var handler = new MockHandler(async request =>
         {
-            Assert.Equal("/v1/emails/mime", request.RequestUri!.AbsolutePath);
+            Assert.Equal("/emails/mime", request.RequestUri!.AbsolutePath);
 
             var body = await request.Content!.ReadAsStringAsync();
             var json = JsonDocument.Parse(body);

@@ -21,7 +21,7 @@ public class Emails
 
     public async Task<SendEmailResponse> SendAsync(SendEmailParams parameters, CancellationToken cancellationToken = default)
     {
-        var url = $"{_client.BaseUrl}/v1/emails";
+        var url = $"{_client.BaseUrl}/emails";
         var response = await _client.HttpClient.PostAsJsonAsync(url, parameters, JsonOptions, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
@@ -39,7 +39,7 @@ public class Emails
 
     public async Task<SendMimeEmailResponse> SendMimeAsync(SendMimeEmailParams parameters, CancellationToken cancellationToken = default)
     {
-        var url = $"{_client.BaseUrl}/v1/emails/mime";
+        var url = $"{_client.BaseUrl}/emails/mime";
         var response = await _client.HttpClient.PostAsJsonAsync(url, parameters, JsonOptions, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
