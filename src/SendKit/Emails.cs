@@ -61,6 +61,13 @@ public class SendEmailParams
     public required string From { get; set; }
     public required List<string> To { get; set; }
     public required string Subject { get; set; }
+
+    public static SendEmailParams Create(string from, string to, string subject) => new()
+    {
+        From = from,
+        To = [to],
+        Subject = subject
+    };
     public string? Html { get; set; }
     public string? Text { get; set; }
     public List<string>? Cc { get; set; }
