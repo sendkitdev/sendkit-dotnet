@@ -77,6 +77,62 @@ public class EmailTests
     }
 
     [Fact]
+    public async Task SendEmailWithCreateFactory()
+    {
+        var handler = new MockHandler(async request =>
+        {
+            var body = await request.Content!.ReadAsStringAsync();
+            var json = JsonDocument.Parse(body);
+            Assert.Equal("sender@example.com", json.RootElement.GetProperty("from").GetString());
+            Assert.Equal("recipient@example.com", json.RootElement.GetProperty("to")[0].GetString());
+            Assert.Equal("Test", json.RootElement.GetProperty("subject").GetString());
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"id":"factory-uuid"}""", System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
+        var client = new SendKitClient("sk_test_123", httpClient: httpClient);
+
+        var p = SendEmailParams.Create("sender@example.com", "recipient@example.com", "Test");
+        p.Html = "<p>Hello</p>";
+        var result = await client.Emails.SendAsync(p);
+
+        Assert.Equal("factory-uuid", result.Id);
+    }
+
+    [Fact]
+    public async Task SendEmailWithDisplayName()
+    {
+        var handler = new MockHandler(async request =>
+        {
+            var body = await request.Content!.ReadAsStringAsync();
+            var json = JsonDocument.Parse(body);
+            Assert.Contains("Bob", json.RootElement.GetProperty("to")[0].GetString());
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"id":"display-uuid"}""", System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
+        var client = new SendKitClient("sk_test_123", httpClient: httpClient);
+
+        var result = await client.Emails.SendAsync(new SendEmailParams
+        {
+            From = "sender@example.com",
+            To = ["Bob <recipient@example.com>"],
+            Subject = "Test",
+            Html = "<p>Hello</p>"
+        });
+
+        Assert.Equal("display-uuid", result.Id);
+    }
+
+    [Fact]
     public async Task SendEmailWithOptionalFields()
     {
         var handler = new MockHandler(async request =>
