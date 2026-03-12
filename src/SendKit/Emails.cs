@@ -74,9 +74,18 @@ public class SendEmailParams
     public List<string>? Bcc { get; set; }
     public string? ReplyTo { get; set; }
     public Dictionary<string, string>? Headers { get; set; }
-    public List<string>? Tags { get; set; }
+    public List<Tag>? Tags { get; set; }
     public string? ScheduledAt { get; set; }
     public List<Attachment>? Attachments { get; set; }
+}
+
+public class Tag
+{
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = "";
+
+    [JsonPropertyName("value")]
+    public string Value { get; set; } = "";
 }
 
 public class Attachment

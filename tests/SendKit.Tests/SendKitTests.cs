@@ -280,8 +280,10 @@ public class EmailTests
             var json = JsonDocument.Parse(body);
             var tags = json.RootElement.GetProperty("tags");
             Assert.Equal(2, tags.GetArrayLength());
-            Assert.Equal("welcome", tags[0].GetString());
-            Assert.Equal("onboarding", tags[1].GetString());
+            Assert.Equal("category", tags[0].GetProperty("name").GetString());
+            Assert.Equal("welcome", tags[0].GetProperty("value").GetString());
+            Assert.Equal("campaign", tags[1].GetProperty("name").GetString());
+            Assert.Equal("onboarding", tags[1].GetProperty("value").GetString());
 
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -298,7 +300,7 @@ public class EmailTests
             To = ["recipient@example.com"],
             Subject = "Tagged email",
             Html = "<p>Hello</p>",
-            Tags = ["welcome", "onboarding"]
+            Tags = [new Tag { Name = "category", Value = "welcome" }, new Tag { Name = "campaign", Value = "onboarding" }]
         });
 
         Assert.Equal("tags-uuid", result.Id);
