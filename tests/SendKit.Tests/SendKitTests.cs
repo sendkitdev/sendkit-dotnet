@@ -104,6 +104,123 @@ public class EmailTests
     }
 
     [Fact]
+    public async Task SendEmailWithCreateFactoryAndReplyTo()
+    {
+        var handler = new MockHandler(async request =>
+        {
+            var body = await request.Content!.ReadAsStringAsync();
+            var json = JsonDocument.Parse(body);
+            Assert.Equal("sender@example.com", json.RootElement.GetProperty("from").GetString());
+            Assert.Equal("recipient@example.com", json.RootElement.GetProperty("to")[0].GetString());
+            Assert.Equal("Test", json.RootElement.GetProperty("subject").GetString());
+            Assert.Equal("reply@example.com", json.RootElement.GetProperty("reply_to")[0].GetString());
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"id":"factory-reply-uuid"}""", System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
+        var client = new SendKitClient("sk_test_123", httpClient: httpClient);
+
+        var p = SendEmailParams.Create("sender@example.com", "recipient@example.com", "Test", replyTo: "reply@example.com");
+        p.Html = "<p>Hello</p>";
+        var result = await client.Emails.SendAsync(p);
+
+        Assert.Equal("factory-reply-uuid", result.Id);
+    }
+
+    [Fact]
+    public async Task SendEmailWithCreateFactoryWithoutReplyTo()
+    {
+        var handler = new MockHandler(async request =>
+        {
+            var body = await request.Content!.ReadAsStringAsync();
+            var json = JsonDocument.Parse(body);
+            Assert.False(json.RootElement.TryGetProperty("reply_to", out _));
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"id":"factory-no-reply-uuid"}""", System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
+        var client = new SendKitClient("sk_test_123", httpClient: httpClient);
+
+        var p = SendEmailParams.Create("sender@example.com", "recipient@example.com", "Test");
+        p.Html = "<p>Hello</p>";
+        var result = await client.Emails.SendAsync(p);
+
+        Assert.Equal("factory-no-reply-uuid", result.Id);
+    }
+
+    [Fact]
+    public async Task SendEmailWithCreateFactoryAndCc()
+    {
+        var handler = new MockHandler(async request =>
+        {
+            var body = await request.Content!.ReadAsStringAsync();
+            var json = JsonDocument.Parse(body);
+            Assert.Equal("sender@example.com", json.RootElement.GetProperty("from").GetString());
+            Assert.Equal("recipient@example.com", json.RootElement.GetProperty("to")[0].GetString());
+            Assert.Equal("Test", json.RootElement.GetProperty("subject").GetString());
+            var cc = json.RootElement.GetProperty("cc");
+            Assert.Equal(JsonValueKind.Array, cc.ValueKind);
+            Assert.Equal(1, cc.GetArrayLength());
+            Assert.Equal("cc@example.com", cc[0].GetString());
+            Assert.False(json.RootElement.TryGetProperty("bcc", out _));
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"id":"factory-cc-uuid"}""", System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
+        var client = new SendKitClient("sk_test_123", httpClient: httpClient);
+
+        var p = SendEmailParams.Create("sender@example.com", "recipient@example.com", "Test", cc: "cc@example.com");
+        p.Html = "<p>Hello</p>";
+        var result = await client.Emails.SendAsync(p);
+
+        Assert.Equal("factory-cc-uuid", result.Id);
+    }
+
+    [Fact]
+    public async Task SendEmailWithCreateFactoryAndBcc()
+    {
+        var handler = new MockHandler(async request =>
+        {
+            var body = await request.Content!.ReadAsStringAsync();
+            var json = JsonDocument.Parse(body);
+            Assert.Equal("sender@example.com", json.RootElement.GetProperty("from").GetString());
+            Assert.Equal("recipient@example.com", json.RootElement.GetProperty("to")[0].GetString());
+            Assert.Equal("Test", json.RootElement.GetProperty("subject").GetString());
+            var bcc = json.RootElement.GetProperty("bcc");
+            Assert.Equal(JsonValueKind.Array, bcc.ValueKind);
+            Assert.Equal(1, bcc.GetArrayLength());
+            Assert.Equal("bcc@example.com", bcc[0].GetString());
+            Assert.False(json.RootElement.TryGetProperty("cc", out _));
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"id":"factory-bcc-uuid"}""", System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
+        var client = new SendKitClient("sk_test_123", httpClient: httpClient);
+
+        var p = SendEmailParams.Create("sender@example.com", "recipient@example.com", "Test", bcc: "bcc@example.com");
+        p.Html = "<p>Hello</p>";
+        var result = await client.Emails.SendAsync(p);
+
+        Assert.Equal("factory-bcc-uuid", result.Id);
+    }
+
+    [Fact]
     public async Task SendEmailWithDisplayName()
     {
         var handler = new MockHandler(async request =>
@@ -139,7 +256,7 @@ public class EmailTests
         {
             var body = await request.Content!.ReadAsStringAsync();
             var json = JsonDocument.Parse(body);
-            Assert.Equal("reply@example.com", json.RootElement.GetProperty("reply_to").GetString());
+            Assert.Equal("reply@example.com", json.RootElement.GetProperty("reply_to")[0].GetString());
             Assert.Equal("2026-03-01T10:00:00Z", json.RootElement.GetProperty("scheduled_at").GetString());
 
             return new HttpResponseMessage(HttpStatusCode.OK)
@@ -157,7 +274,7 @@ public class EmailTests
             To = ["recipient@example.com"],
             Subject = "Test",
             Html = "<p>Hi</p>",
-            ReplyTo = "reply@example.com",
+            ReplyTo = ["reply@example.com"],
             ScheduledAt = "2026-03-01T10:00:00Z"
         });
 

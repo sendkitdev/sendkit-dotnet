@@ -62,17 +62,19 @@ public class SendEmailParams
     public required List<string> To { get; set; }
     public required string Subject { get; set; }
 
-    public static SendEmailParams Create(string from, string to, string subject) => new()
+    public static SendEmailParams Create(string from, string to, string subject, string? replyTo = null, string? cc = null, string? bcc = null)
     {
-        From = from,
-        To = [to],
-        Subject = subject
-    };
+        var p = new SendEmailParams { From = from, To = [to], Subject = subject };
+        if (replyTo != null) p.ReplyTo = [replyTo];
+        if (cc != null) p.Cc = [cc];
+        if (bcc != null) p.Bcc = [bcc];
+        return p;
+    }
     public string? Html { get; set; }
     public string? Text { get; set; }
     public List<string>? Cc { get; set; }
     public List<string>? Bcc { get; set; }
-    public string? ReplyTo { get; set; }
+    public List<string>? ReplyTo { get; set; }
     public Dictionary<string, string>? Headers { get; set; }
     public List<Tag>? Tags { get; set; }
     public string? ScheduledAt { get; set; }
