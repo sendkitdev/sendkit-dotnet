@@ -196,6 +196,257 @@ public class EmailTests
     }
 
     [Fact]
+    public async Task SendEmailWithMultipleRecipients()
+    {
+        var handler = new MockHandler(async request =>
+        {
+            var body = await request.Content!.ReadAsStringAsync();
+            var json = JsonDocument.Parse(body);
+            var to = json.RootElement.GetProperty("to");
+            Assert.Equal(3, to.GetArrayLength());
+            Assert.Equal("alice@example.com", to[0].GetString());
+            Assert.Equal("bob@example.com", to[1].GetString());
+            Assert.Equal("charlie@example.com", to[2].GetString());
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"id":"multi-uuid"}""", System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
+        var client = new SendKitClient("sk_test_123", httpClient: httpClient);
+
+        var result = await client.Emails.SendAsync(new SendEmailParams
+        {
+            From = "sender@example.com",
+            To = ["alice@example.com", "bob@example.com", "charlie@example.com"],
+            Subject = "Test",
+            Html = "<p>Hello everyone</p>"
+        });
+
+        Assert.Equal("multi-uuid", result.Id);
+    }
+
+    [Fact]
+    public async Task SendEmailWithAttachments()
+    {
+        var handler = new MockHandler(async request =>
+        {
+            var body = await request.Content!.ReadAsStringAsync();
+            var json = JsonDocument.Parse(body);
+            var attachments = json.RootElement.GetProperty("attachments");
+            Assert.Equal(2, attachments.GetArrayLength());
+
+            Assert.Equal("report.pdf", attachments[0].GetProperty("filename").GetString());
+            Assert.Equal("base64content", attachments[0].GetProperty("content").GetString());
+            Assert.Equal("application/pdf", attachments[0].GetProperty("content_type").GetString());
+
+            Assert.Equal("notes.txt", attachments[1].GetProperty("filename").GetString());
+            Assert.Equal("plaintext", attachments[1].GetProperty("content").GetString());
+            Assert.False(attachments[1].TryGetProperty("content_type", out _));
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"id":"attach-uuid"}""", System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
+        var client = new SendKitClient("sk_test_123", httpClient: httpClient);
+
+        var result = await client.Emails.SendAsync(new SendEmailParams
+        {
+            From = "sender@example.com",
+            To = ["recipient@example.com"],
+            Subject = "With attachments",
+            Html = "<p>See attached</p>",
+            Attachments =
+            [
+                new Attachment { Filename = "report.pdf", Content = "base64content", ContentType = "application/pdf" },
+                new Attachment { Filename = "notes.txt", Content = "plaintext" }
+            ]
+        });
+
+        Assert.Equal("attach-uuid", result.Id);
+    }
+
+    [Fact]
+    public async Task SendEmailWithTags()
+    {
+        var handler = new MockHandler(async request =>
+        {
+            var body = await request.Content!.ReadAsStringAsync();
+            var json = JsonDocument.Parse(body);
+            var tags = json.RootElement.GetProperty("tags");
+            Assert.Equal(2, tags.GetArrayLength());
+            Assert.Equal("welcome", tags[0].GetString());
+            Assert.Equal("onboarding", tags[1].GetString());
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"id":"tags-uuid"}""", System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
+        var client = new SendKitClient("sk_test_123", httpClient: httpClient);
+
+        var result = await client.Emails.SendAsync(new SendEmailParams
+        {
+            From = "sender@example.com",
+            To = ["recipient@example.com"],
+            Subject = "Tagged email",
+            Html = "<p>Hello</p>",
+            Tags = ["welcome", "onboarding"]
+        });
+
+        Assert.Equal("tags-uuid", result.Id);
+    }
+
+    [Fact]
+    public async Task SendEmailWithCcAndBcc()
+    {
+        var handler = new MockHandler(async request =>
+        {
+            var body = await request.Content!.ReadAsStringAsync();
+            var json = JsonDocument.Parse(body);
+
+            var cc = json.RootElement.GetProperty("cc");
+            Assert.Equal(2, cc.GetArrayLength());
+            Assert.Equal("cc1@example.com", cc[0].GetString());
+            Assert.Equal("cc2@example.com", cc[1].GetString());
+
+            var bcc = json.RootElement.GetProperty("bcc");
+            Assert.Equal(1, bcc.GetArrayLength());
+            Assert.Equal("bcc@example.com", bcc[0].GetString());
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"id":"ccbcc-uuid"}""", System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
+        var client = new SendKitClient("sk_test_123", httpClient: httpClient);
+
+        var result = await client.Emails.SendAsync(new SendEmailParams
+        {
+            From = "sender@example.com",
+            To = ["recipient@example.com"],
+            Subject = "CC and BCC test",
+            Html = "<p>Hello</p>",
+            Cc = ["cc1@example.com", "cc2@example.com"],
+            Bcc = ["bcc@example.com"]
+        });
+
+        Assert.Equal("ccbcc-uuid", result.Id);
+    }
+
+    [Fact]
+    public async Task SendEmailWithTextField()
+    {
+        var handler = new MockHandler(async request =>
+        {
+            var body = await request.Content!.ReadAsStringAsync();
+            var json = JsonDocument.Parse(body);
+            Assert.Equal("Plain text content", json.RootElement.GetProperty("text").GetString());
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"id":"text-uuid"}""", System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
+        var client = new SendKitClient("sk_test_123", httpClient: httpClient);
+
+        var result = await client.Emails.SendAsync(new SendEmailParams
+        {
+            From = "sender@example.com",
+            To = ["recipient@example.com"],
+            Subject = "Test",
+            Html = "<p>Hello</p>",
+            Text = "Plain text content"
+        });
+
+        Assert.Equal("text-uuid", result.Id);
+    }
+
+    [Fact]
+    public async Task SendEmailWithHeaders()
+    {
+        var handler = new MockHandler(async request =>
+        {
+            var body = await request.Content!.ReadAsStringAsync();
+            var json = JsonDocument.Parse(body);
+            var headers = json.RootElement.GetProperty("headers");
+            Assert.Equal("value", headers.GetProperty("X-Custom").GetString());
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"id":"headers-uuid"}""", System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
+        var client = new SendKitClient("sk_test_123", httpClient: httpClient);
+
+        var result = await client.Emails.SendAsync(new SendEmailParams
+        {
+            From = "sender@example.com",
+            To = ["recipient@example.com"],
+            Subject = "Test",
+            Html = "<p>Hello</p>",
+            Headers = new Dictionary<string, string> { { "X-Custom", "value" } }
+        });
+
+        Assert.Equal("headers-uuid", result.Id);
+    }
+
+    [Fact]
+    public async Task SendEmailNullFieldsOmitted()
+    {
+        var handler = new MockHandler(async request =>
+        {
+            var body = await request.Content!.ReadAsStringAsync();
+            var json = JsonDocument.Parse(body);
+
+            Assert.True(json.RootElement.TryGetProperty("from", out _));
+            Assert.True(json.RootElement.TryGetProperty("to", out _));
+            Assert.True(json.RootElement.TryGetProperty("subject", out _));
+            Assert.True(json.RootElement.TryGetProperty("html", out _));
+
+            Assert.False(json.RootElement.TryGetProperty("text", out _));
+            Assert.False(json.RootElement.TryGetProperty("cc", out _));
+            Assert.False(json.RootElement.TryGetProperty("bcc", out _));
+            Assert.False(json.RootElement.TryGetProperty("reply_to", out _));
+            Assert.False(json.RootElement.TryGetProperty("headers", out _));
+            Assert.False(json.RootElement.TryGetProperty("tags", out _));
+            Assert.False(json.RootElement.TryGetProperty("scheduled_at", out _));
+            Assert.False(json.RootElement.TryGetProperty("attachments", out _));
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{"id":"minimal-uuid"}""", System.Text.Encoding.UTF8, "application/json")
+            };
+        });
+
+        var httpClient = new HttpClient(handler) { BaseAddress = new Uri("https://api.sendkit.dev") };
+        var client = new SendKitClient("sk_test_123", httpClient: httpClient);
+
+        var result = await client.Emails.SendAsync(new SendEmailParams
+        {
+            From = "sender@example.com",
+            To = ["recipient@example.com"],
+            Subject = "Test",
+            Html = "<p>Hello</p>"
+        });
+
+        Assert.Equal("minimal-uuid", result.Id);
+    }
+
+    [Fact]
     public async Task ApiError()
     {
         var handler = new MockHandler(HttpStatusCode.UnprocessableEntity,
